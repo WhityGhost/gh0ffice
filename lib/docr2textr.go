@@ -16,9 +16,9 @@ import (
 // There were a few changes in this file to actually support Unicode which the old code was not.
 
 var (
-	errTable           = errors.New("cannot find table stream")
-	errDocEmpty        = errors.New("WordDocument not found")
-	errDocShort        = errors.New("wordDoc block too short")
+	errTable    = errors.New("cannot find table stream")
+	errDocEmpty = errors.New("WordDocument not found")
+	// errDocShort        = errors.New("wordDoc block too short")
 	errInvalidArgument = errors.New("invalid table and/or fib")
 )
 
@@ -407,7 +407,7 @@ func getInt(buf []byte, start int) int {
 // ---- file clx.go ----
 
 var (
-	errInvalidPrc  = errors.New("Invalid Prc structure")
+	errInvalidPrc  = errors.New("invalid Prc structure")
 	errInvalidClx  = errors.New("expected last aCP value to equal fib.cpLength (2.8.35)")
 	errInvalidPcdt = errors.New("expected clxt to be equal 0x02")
 )
