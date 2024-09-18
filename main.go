@@ -3,31 +3,35 @@ package main
 import (
 	"bytes"
 	"fmt"
-	"gh0ffice/lib"
 	"html"
 	"os"
 	"regexp"
 	"strings"
 
-	// "github.com/ledongthuc/pdf"
+	"gh0ffice/lib"
+	"gh0ffice/lib/pdf"
+
 	"github.com/moipa-cn/pptx"
 	"github.com/nguyenthenguyen/docx"
 	"github.com/thedatashed/xlsxreader"
-	"seehuhn.de/go/pdf"
 )
 
 var TAG_RE = regexp.MustCompile(`(<[^>]*>)+`)
 var PARA_RE = regexp.MustCompile(`(</[a-z]:p>)+`)
 
+type Animal interface {
+	Speak() string
+}
+
 func main() {
 	docx2txt("data/1.docx")
 	pptx2txt("data/2.pptx")
 	xlsx2txt("data/3.xlsx")
-	// pdf2txt("data/4.pdf")
+	pdf2txt("data/4.pdf")
 	doc2txt("data/1.doc")
 	ppt2txt("data/2.ppt")
 	xls2txt("data/3.xls")
-	pdf2txt("data/4_1.pdf")
+	// pdf2txt("data/4_1.pdf")
 }
 
 func removeStrangeChars(input string) string {
@@ -37,51 +41,54 @@ func removeStrangeChars(input string) string {
 	return re.ReplaceAllString(input, " ")
 }
 
-func docx2txt(filename string) ([]string, error) {
+func docx2txt(filename string) (string, error) {
 	data_docx, err := docx.ReadDocxFile(filename) // Read data from docx file
 	if err != nil {
-		return []string{}, err
+		return "", err
 	}
-	text_docx := data_docx.Editable().GetContent() // Get whole docx data as XML formated text
-	paras_docx := PARA_RE.Split(text_docx, -1)     // Split the docx in paragraphs
-	for i := range paras_docx {                    // For each paragraph
-		paragraph := TAG_RE.ReplaceAllString(paras_docx[i], "") // Remove all the tags to extract the content
-		paragraph = html.UnescapeString(paragraph)              // replace all the html entities (e.g. &amp)
-		paras_docx[i] = paragraph
-		// fmt.Println(i, removeStrangeChars(paragraph))
-	}
-	data_docx.Close()
-	return paras_docx, nil
+	defer data_docx.Close()
+	text_docx := data_docx.Editable().GetContent()        // Get whole docx data as XML formated text
+	text_docx = PARA_RE.ReplaceAllString(text_docx, "\n") // Replace the end of paragraphs (</w:p) with /n
+	text_docx = TAG_RE.ReplaceAllString(text_docx, "")    // Remove all the tags to extract the content
+	text_docx = html.UnescapeString(text_docx)            // Replace all the html entities (e.g. &amp)
+
+	// fmt.Println(text_docx)
+	return text_docx, nil
 }
 
-func pptx2txt(filename string) ([]string, error) {
+func pptx2txt(filename string) (string, error) {
 	data_pptx, err := pptx.ReadPowerPoint(filename) // Read data from pptx file
 	if err != nil {
-		return []string{}, err
+		return "", err
 	}
 
+	data_pptx.DeletePassWord()
 	slides_pptx := data_pptx.GetSlidesContent() // Get pptx slides data as an array of XML formated text
-	var paras_pptx []string
+	var text_pptx string
 	for i := range slides_pptx {
-		slide_paras_pptx := PARA_RE.Split(slides_pptx[i], -1) // Split the docx in paragraphs
-		for j := range slide_paras_pptx {                     // For each paragraph
-			paragraph := TAG_RE.ReplaceAllString(slide_paras_pptx[j], "") // Remove all the tags to extract the content
-			paragraph = html.UnescapeString(paragraph)                    // replace all the html entities (e.g. &amp)
-			if len(paragraph) > 0 {
-				paras_pptx = append(paras_pptx, paragraph) // Save all paragraphs as ONE array
-				// fmt.Println(i, j, removeStrangeChars(paragraph))
+		slide_text_pptx := PARA_RE.ReplaceAllString(slides_pptx[i], "\n") // Replace the end of paragraphs (</w:p) with /n
+		slide_text_pptx = TAG_RE.ReplaceAllString(slide_text_pptx, "")    // Remove all the tags to extract the content
+		slide_text_pptx = html.UnescapeString(slide_text_pptx)            // Replace all the html entities (e.g. &amp)
+		if len(slide_text_pptx) > 0 {                                     // Save all slides as ONE string
+			if len(text_pptx) > 0 {
+				text_pptx = fmt.Sprintf("%s\n%s", text_pptx, slide_text_pptx)
+			} else {
+				text_pptx = fmt.Sprintf("%s%s", text_pptx, slide_text_pptx)
 			}
 		}
 	}
-	return paras_pptx, nil
+	// fmt.Println(text_pptx)
+	return text_pptx, nil
 }
 
-func xlsx2txt(filename string) ([]string, error) {
+func xlsx2txt(filename string) (string, error) {
 	data_xlsx, err := xlsxreader.OpenFile(filename) // Read data from xlsx file
 	if err != nil {
-		return []string{}, err
+		return "", err
 	}
-	var rows_xlsx []string
+	defer data_xlsx.Close()
+
+	var rows_xlsx string
 	for _, sheet := range data_xlsx.Sheets { // For each sheet of the file
 		for row := range data_xlsx.ReadRows(sheet) { // For each row of the sheet
 			text_row := ""
@@ -92,118 +99,89 @@ func xlsx2txt(filename string) ([]string, error) {
 					text_row = fmt.Sprintf("%s%s", text_row, col.Value)
 				}
 			}
-			rows_xlsx = append(rows_xlsx, text_row)
-			// fmt.Println(removeStrangeChars(text_row))
+			if len(rows_xlsx) > 0 { // Save all rows as ONE string
+				rows_xlsx = fmt.Sprintf("%s\n%s", rows_xlsx, text_row)
+			} else {
+				rows_xlsx = fmt.Sprintf("%s%s", rows_xlsx, text_row)
+			}
 		}
 	}
-	data_xlsx.Close()
+	// fmt.Println(rows_xlsx)
 	return rows_xlsx, nil
 }
 
-func pdf2txt(filename string) ([]string, error) {
-	ropt := &pdf.ReaderOptions{
-		ReadPassword:  func(ID []byte, try int) string { return "" },
-		ErrorHandling: pdf.ErrorHandlingReport,
-	}
-	r, err := pdf.Open(filename, ropt)
+func pdf2txt(filename string) (string, error) { // BUG: Cannot get text from specific (or really malformed?) pages
+	file_pdf, data_pdf, err := pdf.Open(filename) // Read data from pdf file
 	if err != nil {
-		return []string{}, err
+		return "", err
 	}
-	r.Close()
-	return []string{}, nil
+	defer file_pdf.Close()
+
+	var buff_pdf bytes.Buffer
+	bytes_pdf, err := data_pdf.GetPlainText() // Get text of entire pdf file
+	if err != nil {
+		return "", err
+	}
+
+	buff_pdf.ReadFrom(bytes_pdf)
+	text_pdf := buff_pdf.String()
+	// fmt.Println(text_pdf)
+	return text_pdf, nil
 }
 
-// func pdf2txt(filename string) ([]string, error) {
-// 	file_pdf, data_pdf, err := pdf.Open(filename) // Read data from pdf file
-// 	if err != nil {
-// 		return []string{}, err
-// 	}
-// 	var pages_pdf []string
-// 	for i := 1; i <= data_pdf.NumPage(); i++ { // For each page of the file
-// 		data_page := data_pdf.Page(i) // Get page data
-// 		if data_page.V.IsNull() {     // If page is empty, move to the next iteration
-// 			continue
-// 		}
-// 		rows_page, err := data_page.GetTextByRow() // Get text by rows in the page
-// 		if err != nil {                            // If an error occurred, move to the next iteration
-// 			return []string{}, err
-// 		}
-// 		text_page := ""
-// 		for j, row_page := range rows_page { // For each row
-// 			text_row := ""
-// 			for _, word_row := range row_page.Content { // Concatenate words of the row
-// 				text_row = fmt.Sprintf("%s%s", text_row, word_row.S)
-// 			}
-// 			// Concatenate rows of the page
-// 			if j > 0 {
-// 				text_page = fmt.Sprintf("%s\n%s", text_page, text_row)
-// 			} else {
-// 				text_page = fmt.Sprintf("%s%s", text_page, text_row)
-// 			}
-// 		}
-// 		pages_pdf = append(pages_pdf, removeStrangeChars(text_page))
-// 		fmt.Println(removeStrangeChars(text_page))
-// 	}
-// 	file_pdf.Close()
-// 	return pages_pdf, nil
-// }
-
-func doc2txt(filename string) ([]string, error) {
+func doc2txt(filename string) (string, error) {
 	file_doc, _ := os.Open(filename)        // Open doc file
 	data_doc, err := lib.DOC2Text(file_doc) // Read data from a doc file
 	if err != nil {
-		return []string{}, err
+		return "", err
 	}
+	defer file_doc.Close()
 
 	actual := data_doc.(*bytes.Buffer) // Buffer for hold line text of doc file
-	var paras_doc []string
+	text_doc := ""
 	for aline, err := actual.ReadString('\r'); err == nil; aline, err = actual.ReadString('\r') { // Get text by line
 		aline = strings.Trim(aline, " \n\r")
 		if aline != "" {
-			paras_doc = append(paras_doc, removeStrangeChars(aline))
-			// fmt.Println(removeStrangeChars(aline))
+			if len(text_doc) > 0 {
+				text_doc = fmt.Sprintf("%s\n%s", text_doc, removeStrangeChars(aline))
+			} else {
+				text_doc = fmt.Sprintf("%s%s", text_doc, removeStrangeChars(aline))
+			}
 		}
 	}
-	file_doc.Close()
-	return paras_doc, nil
+	text_doc = removeStrangeChars(text_doc)
+	// fmt.Println(text_doc)
+	return text_doc, nil
 }
 
-func ppt2txt(filename string) ([]string, error) {
+func ppt2txt(filename string) (string, error) {
 	file_ppt, err := os.Open(filename) // Open ppt file
 	if err != nil {
-		return []string{}, err
+		return "", err
 	}
+	defer file_ppt.Close()
 
 	text_ppt, err := lib.ExtractText(file_ppt) // Read text from a ppt file
 	if err != nil {
-		return []string{}, err
+		return "", err
 	}
-
-	var paras_ppt []string
-	for _, aline := range strings.Split(text_ppt, "\r") { // Seperate text as lines
-		aline = strings.Trim(aline, " \n\r")
-		if aline != "" {
-			paras_ppt = append(paras_ppt, removeStrangeChars(aline))
-			// fmt.Println(removeStrangeChars(aline))
-		}
-	}
-	file_ppt.Close()
-	return paras_ppt, nil
+	text_ppt = removeStrangeChars(text_ppt)
+	// fmt.Println(text_ppt)
+	return text_ppt, nil
 }
 
-func xls2txt(filename string) ([]string, error) {
+func xls2txt(filename string) (string, error) {
 	file_xls, err := os.Open(filename) // Open xls file
 	if err != nil {
-		return []string{}, err
+		return "", err
 	}
+	defer file_xls.Close()
 
-	rows_xls, err := lib.XLS2Text(file_xls) // Convert xls data to an array of rows (include all sheets)
+	text_xls, err := lib.XLS2Text(file_xls) // Convert xls data to an array of rows (include all sheets)
 	if err != nil {
-		return []string{}, err
+		return "", err
 	}
-	// for _, row := range rows_xls {
-	// 	fmt.Println("🍺", row)
-	// }
-	file_xls.Close()
-	return rows_xls, nil
+	text_xls = removeStrangeChars(text_xls)
+	// fmt.Println(text_xls)
+	return text_xls, nil
 }

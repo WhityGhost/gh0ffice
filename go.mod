@@ -17,12 +17,6 @@ require (
 )
 
 require (
-	github.com/xdg-go/stringprep v1.0.4 // indirect
-	golang.org/x/exp v0.0.0-20240409090435-93d18d7e34b8 // indirect
-	seehuhn.de/go/pdf v0.5.0 // indirect
-)
-
-require (
 	github.com/richardlehane/msoleps v1.0.1 // indirect
 	golang.org/x/text v0.18.0
 )

@@ -1,12 +1,3 @@
-/*
-File Name:  XLS 2 Text.go
-Copyright:  2019 Kleissner Investments s.r.o.
-Author:     Peter Kleissner
-
-The code originally used https://github.com/extrame/xls, which revealed multiple bugs that crashed for certain Excel files.
-Now it forks the xls package and the underlying ole2 package. This fork also fixes excessive memory usage issues.
-*/
-
 package lib
 
 import (
@@ -21,17 +12,21 @@ import (
 // XLS2Text extracts text from an Excel sheet. It returns bytes written.
 // The parameter size is the max amount of bytes (not characters) to write out.
 // The whole Excel file is required even for partial text extraction. This function returns no error with 0 bytes written in case of corrupted or invalid file.
-func XLS2Text(reader io.ReadSeeker) ([]string, error) {
+func XLS2Text(reader io.ReadSeeker) (string, error) {
 
 	xlFile, err := xls.OpenReader(reader, "utf-8")
 	if err != nil || xlFile == nil {
-		return []string{}, err
+		return "", err
 	}
 
-	var extracted_text []string
+	extracted_text := ""
 	for n := 0; n < xlFile.NumSheets(); n++ {
 		if sheet1 := xlFile.GetSheet(n); sheet1 != nil {
-			extracted_text = append(extracted_text, xlGenerateSheetTitle(sheet1.Name, n, int(sheet1.MaxRow)))
+			if len(extracted_text) > 0 {
+				extracted_text = fmt.Sprintf("%s\n%s", extracted_text, xlGenerateSheetTitle(sheet1.Name, n, int(sheet1.MaxRow)))
+			} else {
+				extracted_text = fmt.Sprintf("%s%s", extracted_text, xlGenerateSheetTitle(sheet1.Name, n, int(sheet1.MaxRow)))
+			}
 
 			for m := 0; m <= int(sheet1.MaxRow); m++ {
 				row1 := sheet1.Row(m)
@@ -52,8 +47,11 @@ func XLS2Text(reader io.ReadSeeker) ([]string, error) {
 						rowText += text
 					}
 				}
-
-				extracted_text = append(extracted_text, rowText)
+				if len(extracted_text) > 0 {
+					extracted_text = fmt.Sprintf("%s\n%s", extracted_text, rowText)
+				} else {
+					extracted_text = fmt.Sprintf("%s%s", extracted_text, rowText)
+				}
 			}
 		}
 	}
