@@ -46,27 +46,27 @@ var PARA_RE = regexp.MustCompile(`(</[a-z]:p>)+`)
 var DEBUG bool = false
 
 type Document struct {
-	filename       string
-	title          string
-	subject        string
-	creator        string
-	keywords       string
-	description    string
-	lastmodifiedby string
-	revision       string
-	category       string
-	content        string
-	modifytime     int
-	createtime     int
-	accesstime     int
-	size           int
+	Filename       string
+	Title          string
+	Subject        string
+	Creator        string
+	Keywords       string
+	Description    string
+	Lastmodifiedby string
+	Revision       string
+	Category       string
+	Content        string
+	Modifytime     int
+	Createtime     int
+	Accesstime     int
+	Size           int
 }
 
 type DocReader func(string) (string, error)
 
 // Make a struct of documentation involves content and metadata, file information
-func inspectDocument(filename string) (*Document, error) {
-	data := Document{filename: filename}
+func InspectDocument(filename string) (*Document, error) {
+	data := Document{Filename: filename}
 	extension := path.Ext(filename)
 	_, err := insertFileInfoData(&data)
 	if err != nil {
@@ -104,7 +104,7 @@ func inspectDocument(filename string) (*Document, error) {
 		return &data, err
 	}
 	if DEBUG {
-		log.Infof("✔️ successfully read content of file: %s", data.filename)
+		log.Infof("✔️ successfully read content of file: %s", data.Filename)
 		printFileInfoData(&data)
 	}
 	return &data, nil
@@ -112,7 +112,7 @@ func inspectDocument(filename string) (*Document, error) {
 
 // Read the meta data of office files (only *.docx, *.xlsx, *.pptx) and insert into the interface
 func insertMetaData(data *Document) (bool, error) {
-	file, err := os.Open(data.filename)
+	file, err := os.Open(data.Filename)
 	if err != nil {
 		return false, err
 	}
@@ -121,40 +121,40 @@ func insertMetaData(data *Document) (bool, error) {
 	if err != nil {
 		return false, errors.New("failed to get office meta data")
 	}
-	data.title = meta.Title
-	data.subject = meta.Subject
-	data.creator = meta.Creator
-	data.keywords = meta.Keywords
-	data.description = meta.Description
-	data.lastmodifiedby = meta.LastModifiedBy
-	data.revision = meta.Revision
-	data.category = meta.Category
-	data.content = meta.Category
+	data.Title = meta.Title
+	data.Subject = meta.Subject
+	data.Creator = meta.Creator
+	data.Keywords = meta.Keywords
+	data.Description = meta.Description
+	data.Lastmodifiedby = meta.LastModifiedBy
+	data.Revision = meta.Revision
+	data.Category = meta.Category
+	data.Content = meta.Category
 	return true, nil
 }
 
 // Read the content of office files and insert into the interface
 func insertContentData(data *Document, reader DocReader) (bool, error) {
-	content, err := reader(data.filename)
+	content, err := reader(data.Filename)
 	if err != nil {
 		return false, err
 	}
-	data.content = content
+	data.Content = content
 	return true, nil
 }
 
 // Read the file information of any files and insert into the interface
 func insertFileInfoData(data *Document) (bool, error) {
-	fileinfo, err := os.Stat(data.filename)
+	fileinfo, err := os.Stat(data.Filename)
 	if err != nil {
 		return false, err
 	}
 	// if runtime.GOOS == "windows" {
 	stat := fileinfo.Sys().(*syscall.Win32FileAttributeData)
-	data.createtime = int(stat.LastAccessTime.Nanoseconds())
-	data.modifytime = int(stat.CreationTime.Nanoseconds())
-	data.accesstime = int(stat.LastWriteTime.Nanoseconds())
-	data.size = int(fileinfo.Size())
+	data.Createtime = int(stat.LastAccessTime.Nanoseconds())
+	data.Modifytime = int(stat.CreationTime.Nanoseconds())
+	data.Accesstime = int(stat.LastWriteTime.Nanoseconds())
+	data.Size = int(fileinfo.Size())
 	// } else {
 	// 	aTime := fileinfo.Sys().(*syscall.Stat_t).Atim
 	// 	cTime := fileinfo.Sys().(*syscall.Stat_t).Ctim
@@ -168,44 +168,44 @@ func insertFileInfoData(data *Document) (bool, error) {
 
 // Print the file information (except for content) for debugging
 func printFileInfoData(data *Document) {
-	if len(data.filename) > 0 {
-		log.Infof("📄 filename: %s", data.filename)
+	if len(data.Filename) > 0 {
+		log.Infof("📄 filename: %s", data.Filename)
 	}
-	if len(data.title) > 0 {
-		log.Infof("📄 title: %s", data.title)
+	if len(data.Title) > 0 {
+		log.Infof("📄 title: %s", data.Title)
 	}
-	if len(data.subject) > 0 {
-		log.Infof("📄 subject: %s", data.subject)
+	if len(data.Subject) > 0 {
+		log.Infof("📄 subject: %s", data.Subject)
 	}
-	if len(data.creator) > 0 {
-		log.Infof("👤 creator: %s", data.creator)
+	if len(data.Creator) > 0 {
+		log.Infof("👤 creator: %s", data.Creator)
 	}
-	if len(data.keywords) > 0 {
-		log.Infof("🗝️ keywords: %s", data.keywords)
+	if len(data.Keywords) > 0 {
+		log.Infof("🗝️ keywords: %s", data.Keywords)
 	}
-	if len(data.description) > 0 {
-		log.Infof("📄 description: %s", data.description)
+	if len(data.Description) > 0 {
+		log.Infof("📄 description: %s", data.Description)
 	}
-	if len(data.lastmodifiedby) > 0 {
-		log.Infof("👤 lastmodifiedby: %s", data.lastmodifiedby)
+	if len(data.Lastmodifiedby) > 0 {
+		log.Infof("👤 lastmodifiedby: %s", data.Lastmodifiedby)
 	}
-	if len(data.revision) > 0 {
-		log.Infof("📄 revision: %s", data.revision)
+	if len(data.Revision) > 0 {
+		log.Infof("📄 revision: %s", data.Revision)
 	}
-	if len(data.category) > 0 {
-		log.Infof("📄 category: %s", data.category)
+	if len(data.Category) > 0 {
+		log.Infof("📄 category: %s", data.Category)
 	}
 	// if len(data.content) > 0 {
 	//	log.Infof("📄 content: %s", data.content))
 	// }
-	if data.modifytime > 0 {
-		log.Infof("📆 modifytime (ISO): %s", time.Unix(0, int64(data.modifytime)).Format(ISO))
+	if data.Modifytime > 0 {
+		log.Infof("📆 modifytime (ISO): %s", time.Unix(0, int64(data.Modifytime)).Format(ISO))
 	}
-	if data.createtime > 0 {
-		log.Infof("📆 createtime (ISO): %s", time.Unix(0, int64(data.createtime)).Format(ISO))
+	if data.Createtime > 0 {
+		log.Infof("📆 createtime (ISO): %s", time.Unix(0, int64(data.Createtime)).Format(ISO))
 	}
-	if data.accesstime > 0 {
-		log.Infof("📆 accesstime (ISO): %s", time.Unix(0, int64(data.accesstime)).Format(ISO))
+	if data.Accesstime > 0 {
+		log.Infof("📆 accesstime (ISO): %s", time.Unix(0, int64(data.Accesstime)).Format(ISO))
 	}
 }
 
