@@ -46,6 +46,7 @@ var PARA_RE = regexp.MustCompile(`(</[a-z]:p>)+`)
 var DEBUG bool = false
 
 type Document struct {
+	Path           string
 	Filename       string
 	Title          string
 	Subject        string
@@ -65,9 +66,10 @@ type Document struct {
 type DocReader func(string) (string, error)
 
 // Make a struct of documentation involves content and metadata, file information
-func InspectDocument(filename string) (*Document, error) {
-	data := Document{Filename: filename}
-	extension := path.Ext(filename)
+func InspectDocument(pathname string) (*Document, error) {
+	filename := path.Base(pathname)
+	data := Document{Path: pathname, Filename: filename, Title: filename}
+	extension := path.Ext(pathname)
 	_, err := insertFileInfoData(&data)
 	if err != nil {
 		return &data, err
