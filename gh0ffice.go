@@ -43,7 +43,7 @@ const ISO string = "2006-01-02T15:04:05"
 
 var TAG_RE = regexp.MustCompile(`(<[^>]*>)+`)
 var PARA_RE = regexp.MustCompile(`(</[a-z]:p>)+`)
-var DEBUG bool = true
+var DEBUG bool = false
 
 type Document struct {
 	filename       string
