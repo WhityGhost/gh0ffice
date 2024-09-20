@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"gh0ffice/lib/xls"
+	"github.com/WhityGhost/gh0ffice/lib/xls"
 )
 
 // XLS2Text extracts text from an Excel sheet. It returns bytes written.

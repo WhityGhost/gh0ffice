@@ -8,7 +8,7 @@ import (
 	"io"
 	"strings"
 
-	"gh0ffice/lib/ioadapters"
+	"github.com/WhityGhost/gh0ffice/lib/ioadapters"
 
 	"github.com/richardlehane/mscfb"
 	"golang.org/x/text/encoding"

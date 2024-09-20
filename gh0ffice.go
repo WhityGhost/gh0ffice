@@ -29,9 +29,9 @@ import (
 	"syscall"
 	"time"
 
-	"gh0ffice/lib"
-	"gh0ffice/lib/metagoffice"
-	"gh0ffice/lib/pdf"
+	"github.com/WhityGhost/gh0ffice/lib"
+	"github.com/WhityGhost/gh0ffice/lib/metagoffice"
+	"github.com/WhityGhost/gh0ffice/lib/pdf"
 
 	"github.com/charmbracelet/log"
 	"github.com/moipa-cn/pptx"

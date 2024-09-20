@@ -1,4 +1,6 @@
-module gh0ffice
+module github.com/WhityGhost/gh0ffice
+
+retract v0.3.2
 
 go 1.23.1
 

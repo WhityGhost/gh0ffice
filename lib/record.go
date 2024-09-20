@@ -5,7 +5,7 @@ import (
 	"errors"
 	"io"
 
-	"gh0ffice/lib/ioadapters"
+	"github.com/WhityGhost/gh0ffice/lib/ioadapters"
 )
 
 const headerSize = 8
