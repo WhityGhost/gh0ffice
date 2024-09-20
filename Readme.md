@@ -54,7 +54,6 @@ const DEBUG bool = true
 - The PDF parsing may fail on certain complex or malformed documents.
 - Only straightforward text extraction is performed; formatting and images are not considered.
 - Compatibility tested primarily on major office file formats.
-- Test not implemented as it's tested by our team manually.
 
 ## 📝 License
 
