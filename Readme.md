@@ -1,4 +1,4 @@
-# 📄 Gh0ffice <span style="color: #f08; font-size: 18px">(Office/PDF File Parser)</span>
+# 📄 Gh0ffice (Office/PDF File Parser)
 
 This Go-based project provides a robust parser for various office document formats, including DOCX/DOC, PPTX/PPT, XLSX/XLS, and PDF. The parser extracts both content and metadata from these file types, allowing easy access to structured document data for further processing or analysis.
 
