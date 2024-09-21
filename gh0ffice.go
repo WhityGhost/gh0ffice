@@ -65,6 +65,10 @@ type Document struct {
 
 type DocReader func(string) (string, error)
 
+func SetDebug(dbg bool) {
+	DEBUG = true
+}
+
 // Make a struct of documentation involves content and metadata, file information
 func InspectDocument(pathname string) (*Document, error) {
 	filename := path.Base(pathname)
