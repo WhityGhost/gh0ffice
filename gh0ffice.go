@@ -66,7 +66,7 @@ type Document struct {
 type DocReader func(string) (string, error)
 
 func SetDebug(dbg bool) {
-	DEBUG = true
+	DEBUG = dbg
 }
 
 // Make a struct of documentation involves content and metadata, file information
