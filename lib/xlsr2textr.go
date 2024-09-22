@@ -22,7 +22,7 @@ func XLS2Text(reader io.ReadSeeker) (string, error) {
 	extracted_text := ""
 	for n := 0; n < xlFile.NumSheets(); n++ {
 		if sheet1 := xlFile.GetSheet(n); sheet1 != nil {
-			if len(extracted_text) > 0 {
+			if extracted_text != "" {
 				extracted_text = fmt.Sprintf("%s\n%s", extracted_text, xlGenerateSheetTitle(sheet1.Name, n, int(sheet1.MaxRow)))
 			} else {
 				extracted_text = fmt.Sprintf("%s%s", extracted_text, xlGenerateSheetTitle(sheet1.Name, n, int(sheet1.MaxRow)))
@@ -47,7 +47,7 @@ func XLS2Text(reader io.ReadSeeker) (string, error) {
 						rowText += text
 					}
 				}
-				if len(extracted_text) > 0 {
+				if extracted_text != "" {
 					extracted_text = fmt.Sprintf("%s\n%s", extracted_text, rowText)
 				} else {
 					extracted_text = fmt.Sprintf("%s%s", extracted_text, rowText)

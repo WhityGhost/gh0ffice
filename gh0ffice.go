@@ -72,7 +72,7 @@ func SetDebug(dbg bool) {
 // Make a struct of documentation involves content and metadata, file information
 func InspectDocument(pathname string) (*Document, error) {
 	filename := path.Base(pathname)
-	data := Document{Path: pathname, Filename: filename, Title: filename}
+	data := Document{Path: pathname, Title: filename}
 	extension := path.Ext(pathname)
 	_, err := insertFileInfoData(&data)
 	if err != nil {
@@ -118,7 +118,7 @@ func InspectDocument(pathname string) (*Document, error) {
 
 // Read the meta data of office files (only *.docx, *.xlsx, *.pptx) and insert into the interface
 func insertMetaData(data *Document) (bool, error) {
-	file, err := os.Open(data.Filename)
+	file, err := os.Open(data.Path)
 	if err != nil {
 		return false, err
 	}
@@ -127,7 +127,9 @@ func insertMetaData(data *Document) (bool, error) {
 	if err != nil {
 		return false, errors.New("failed to get office meta data")
 	}
-	data.Title = meta.Title
+	if meta.Title != "" {
+		data.Title = meta.Title
+	}
 	data.Subject = meta.Subject
 	data.Creator = meta.Creator
 	data.Keywords = meta.Keywords
@@ -141,7 +143,7 @@ func insertMetaData(data *Document) (bool, error) {
 
 // Read the content of office files and insert into the interface
 func insertContentData(data *Document, reader DocReader) (bool, error) {
-	content, err := reader(data.Filename)
+	content, err := reader(data.Path)
 	if err != nil {
 		return false, err
 	}
@@ -151,12 +153,13 @@ func insertContentData(data *Document, reader DocReader) (bool, error) {
 
 // Read the file information of any files and insert into the interface
 func insertFileInfoData(data *Document) (bool, error) {
-	fileinfo, err := os.Stat(data.Filename)
+	fileinfo, err := os.Stat(data.Path)
 	if err != nil {
 		return false, err
 	}
 	// if runtime.GOOS == "windows" {
 	stat := fileinfo.Sys().(*syscall.Win32FileAttributeData)
+	data.Filename = fileinfo.Name()
 	data.Createtime = int(stat.LastAccessTime.Nanoseconds())
 	data.Modifytime = int(stat.CreationTime.Nanoseconds())
 	data.Accesstime = int(stat.LastWriteTime.Nanoseconds())
@@ -174,34 +177,34 @@ func insertFileInfoData(data *Document) (bool, error) {
 
 // Print the file information (except for content) for debugging
 func printFileInfoData(data *Document) {
-	if len(data.Filename) > 0 {
+	if data.Filename != "" {
 		log.Infof("📄 filename: %s", data.Filename)
 	}
-	if len(data.Title) > 0 {
+	if data.Title != "" {
 		log.Infof("📄 title: %s", data.Title)
 	}
-	if len(data.Subject) > 0 {
+	if data.Subject != "" {
 		log.Infof("📄 subject: %s", data.Subject)
 	}
-	if len(data.Creator) > 0 {
+	if data.Creator != "" {
 		log.Infof("👤 creator: %s", data.Creator)
 	}
-	if len(data.Keywords) > 0 {
+	if data.Keywords != "" {
 		log.Infof("🗝️ keywords: %s", data.Keywords)
 	}
-	if len(data.Description) > 0 {
+	if data.Description != "" {
 		log.Infof("📄 description: %s", data.Description)
 	}
-	if len(data.Lastmodifiedby) > 0 {
+	if data.Lastmodifiedby != "" {
 		log.Infof("👤 lastmodifiedby: %s", data.Lastmodifiedby)
 	}
-	if len(data.Revision) > 0 {
+	if data.Revision != "" {
 		log.Infof("📄 revision: %s", data.Revision)
 	}
-	if len(data.Category) > 0 {
+	if data.Category != "" {
 		log.Infof("📄 category: %s", data.Category)
 	}
-	// if len(data.content) > 0 {
+	// if data.content != "" {
 	//	log.Infof("📄 content: %s", data.content))
 	// }
 	if data.Modifytime > 0 {
@@ -250,8 +253,8 @@ func pptx2txt(filename string) (string, error) {
 		slide_text_pptx := PARA_RE.ReplaceAllString(slides_pptx[i], "\n") // Replace the end of paragraphs (</w:p) with /n
 		slide_text_pptx = TAG_RE.ReplaceAllString(slide_text_pptx, "")    // Remove all the tags to extract the content
 		slide_text_pptx = html.UnescapeString(slide_text_pptx)            // Replace all the html entities (e.g. &amp)
-		if len(slide_text_pptx) > 0 {                                     // Save all slides as ONE string
-			if len(text_pptx) > 0 {
+		if slide_text_pptx != "" {                                        // Save all slides as ONE string
+			if text_pptx != "" {
 				text_pptx = fmt.Sprintf("%s\n%s", text_pptx, slide_text_pptx)
 			} else {
 				text_pptx = fmt.Sprintf("%s%s", text_pptx, slide_text_pptx)
@@ -280,7 +283,7 @@ func xlsx2txt(filename string) (string, error) {
 					text_row = fmt.Sprintf("%s%s", text_row, col.Value)
 				}
 			}
-			if len(rows_xlsx) > 0 { // Save all rows as ONE string
+			if rows_xlsx != "" { // Save all rows as ONE string
 				rows_xlsx = fmt.Sprintf("%s\n%s", rows_xlsx, text_row)
 			} else {
 				rows_xlsx = fmt.Sprintf("%s%s", rows_xlsx, text_row)
@@ -323,7 +326,7 @@ func doc2txt(filename string) (string, error) {
 	for aline, err := actual.ReadString('\r'); err == nil; aline, err = actual.ReadString('\r') { // Get text by line
 		aline = strings.Trim(aline, " \n\r")
 		if aline != "" {
-			if len(text_doc) > 0 {
+			if text_doc != "" {
 				text_doc = fmt.Sprintf("%s\n%s", text_doc, removeStrangeChars(aline))
 			} else {
 				text_doc = fmt.Sprintf("%s%s", text_doc, removeStrangeChars(aline))
