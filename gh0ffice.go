@@ -160,6 +160,7 @@ func insertFileInfoData(data *Document) (bool, error) {
 	// if runtime.GOOS == "windows" {
 	stat := fileinfo.Sys().(*syscall.Win32FileAttributeData)
 	data.Filename = fileinfo.Name()
+	data.Title = data.Filename
 	data.Createtime = int(stat.LastAccessTime.Nanoseconds())
 	data.Modifytime = int(stat.CreationTime.Nanoseconds())
 	data.Accesstime = int(stat.LastWriteTime.Nanoseconds())
