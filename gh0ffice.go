@@ -57,9 +57,9 @@ type Document struct {
 	Revision       string
 	Category       string
 	Content        string
-	Modifytime     int
-	Createtime     int
-	Accesstime     int
+	Modifytime     time.Time
+	Createtime     time.Time
+	Accesstime     time.Time
 	Size           int
 }
 
@@ -161,9 +161,9 @@ func insertFileInfoData(data *Document) (bool, error) {
 	stat := fileinfo.Sys().(*syscall.Win32FileAttributeData)
 	data.Filename = fileinfo.Name()
 	data.Title = data.Filename
-	data.Createtime = int(stat.LastAccessTime.Nanoseconds())
-	data.Modifytime = int(stat.CreationTime.Nanoseconds())
-	data.Accesstime = int(stat.LastWriteTime.Nanoseconds())
+	data.Createtime = time.Unix(0, stat.LastAccessTime.Nanoseconds())
+	data.Modifytime = time.Unix(0, stat.CreationTime.Nanoseconds())
+	data.Accesstime = time.Unix(0, stat.LastWriteTime.Nanoseconds())
 	data.Size = int(fileinfo.Size())
 	// } else {
 	// 	aTime := fileinfo.Sys().(*syscall.Stat_t).Atim
@@ -208,14 +208,14 @@ func printFileInfoData(data *Document) {
 	// if data.content != "" {
 	//	log.Infof("📄 content: %s", data.content))
 	// }
-	if data.Modifytime > 0 {
-		log.Infof("📆 modifytime (ISO): %s", time.Unix(0, int64(data.Modifytime)).Format(ISO))
+	if !data.Modifytime.IsZero() {
+		log.Infof("📆 modifytime (ISO): %s", data.Modifytime.Format(ISO))
 	}
-	if data.Createtime > 0 {
-		log.Infof("📆 createtime (ISO): %s", time.Unix(0, int64(data.Createtime)).Format(ISO))
+	if !data.Createtime.IsZero() {
+		log.Infof("📆 createtime (ISO): %s", data.Createtime.Format(ISO))
 	}
-	if data.Accesstime > 0 {
-		log.Infof("📆 accesstime (ISO): %s", time.Unix(0, int64(data.Accesstime)).Format(ISO))
+	if !data.Accesstime.IsZero() {
+		log.Infof("📆 accesstime (ISO): %s", data.Accesstime.Format(ISO))
 	}
 }
 
