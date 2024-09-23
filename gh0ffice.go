@@ -24,6 +24,7 @@ import (
 	"html"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"syscall"
@@ -46,7 +47,8 @@ var PARA_RE = regexp.MustCompile(`(</[a-z]:p>)+`)
 var DEBUG bool = false
 
 type Document struct {
-	Path           string
+	path           string
+	RePath         string
 	Filename       string
 	Title          string
 	Subject        string
@@ -70,11 +72,17 @@ func SetDebug(dbg bool) {
 }
 
 // Make a struct of documentation involves content and metadata, file information
-func InspectDocument(pathname string) (*Document, error) {
+func InspectDocument(pathname string, target_abpath string) (*Document, error) {
+	abPath, err := filepath.Abs(pathname)
+	if err != nil {
+		return nil, err
+	}
+	rePath := abPath
+	rePath = strings.TrimPrefix(rePath, target_abpath)
 	filename := path.Base(pathname)
-	data := Document{Path: pathname, Title: filename}
+	data := Document{path: pathname, RePath: rePath, Title: filename}
 	extension := path.Ext(pathname)
-	_, err := insertFileInfoData(&data)
+	_, err = insertFileInfoData(&data)
 	if err != nil {
 		return &data, err
 	}
@@ -118,7 +126,7 @@ func InspectDocument(pathname string) (*Document, error) {
 
 // Read the meta data of office files (only *.docx, *.xlsx, *.pptx) and insert into the interface
 func insertMetaData(data *Document) (bool, error) {
-	file, err := os.Open(data.Path)
+	file, err := os.Open(data.path)
 	if err != nil {
 		return false, err
 	}
@@ -143,7 +151,7 @@ func insertMetaData(data *Document) (bool, error) {
 
 // Read the content of office files and insert into the interface
 func insertContentData(data *Document, reader DocReader) (bool, error) {
-	content, err := reader(data.Path)
+	content, err := reader(data.path)
 	if err != nil {
 		return false, err
 	}
@@ -153,7 +161,7 @@ func insertContentData(data *Document, reader DocReader) (bool, error) {
 
 // Read the file information of any files and insert into the interface
 func insertFileInfoData(data *Document) (bool, error) {
-	fileinfo, err := os.Stat(data.Path)
+	fileinfo, err := os.Stat(data.path)
 	if err != nil {
 		return false, err
 	}
@@ -205,9 +213,6 @@ func printFileInfoData(data *Document) {
 	if data.Category != "" {
 		log.Infof("📄 category: %s", data.Category)
 	}
-	// if data.content != "" {
-	//	log.Infof("📄 content: %s", data.content))
-	// }
 	if !data.Modifytime.IsZero() {
 		log.Infof("📆 modifytime (ISO): %s", data.Modifytime.Format(ISO))
 	}
@@ -217,6 +222,9 @@ func printFileInfoData(data *Document) {
 	if !data.Accesstime.IsZero() {
 		log.Infof("📆 accesstime (ISO): %s", data.Accesstime.Format(ISO))
 	}
+	// if data.content != "" {
+	//	log.Infof("📄 content: %s", data.content))
+	// }
 }
 
 func removeStrangeChars(input string) string {
