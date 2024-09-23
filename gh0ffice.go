@@ -48,21 +48,21 @@ var DEBUG bool = false
 
 type Document struct {
 	path           string
-	RePath         string
-	Filename       string
-	Title          string
-	Subject        string
-	Creator        string
-	Keywords       string
-	Description    string
-	Lastmodifiedby string
-	Revision       string
-	Category       string
-	Content        string
-	Modifytime     time.Time
-	Createtime     time.Time
-	Accesstime     time.Time
-	Size           int
+	RePath         string    `json:"path"`
+	Filename       string    `json:"filename"`
+	Title          string    `json:"title"`
+	Subject        string    `json:"subject"`
+	Creator        string    `json:"creator"`
+	Keywords       string    `json:"keywords"`
+	Description    string    `json:"description"`
+	Lastmodifiedby string    `json:"lastmodifiedby"`
+	Revision       string    `json:"revision"`
+	Category       string    `json:"category"`
+	Content        string    `json:"content"`
+	Modifytime     time.Time `json:"modifiedAt"`
+	Createtime     time.Time `json:"createdAt"`
+	Accesstime     time.Time `json:"accessedAt"`
+	Size           int       `json:"size"`
 }
 
 type DocReader func(string) (string, error)
