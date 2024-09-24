@@ -55,13 +55,13 @@ type Document struct {
 	Creator        string    `json:"creator"`
 	Keywords       string    `json:"keywords"`
 	Description    string    `json:"description"`
-	Lastmodifiedby string    `json:"lastmodifiedby"`
+	Lastmodifiedby string    `json:"lastModifiedBy"`
 	Revision       string    `json:"revision"`
 	Category       string    `json:"category"`
 	Content        string    `json:"content"`
-	Modifytime     time.Time `json:"modifiedAt"`
-	Createtime     time.Time `json:"createdAt"`
-	Accesstime     time.Time `json:"accessedAt"`
+	Modifytime     time.Time `json:"modified"`
+	Createtime     time.Time `json:"created"`
+	Accesstime     time.Time `json:"accessed"`
 	Size           int       `json:"size"`
 }
 
