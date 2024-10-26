@@ -169,9 +169,9 @@ func insertFileInfoData(data *Document) (bool, error) {
 	stat := fileinfo.Sys().(*syscall.Win32FileAttributeData)
 	data.Filename = fileinfo.Name()
 	data.Title = data.Filename
-	data.Createtime = time.Unix(0, stat.LastAccessTime.Nanoseconds())
-	data.Modifytime = time.Unix(0, stat.CreationTime.Nanoseconds())
-	data.Accesstime = time.Unix(0, stat.LastWriteTime.Nanoseconds())
+	data.Createtime = time.Unix(0, stat.CreationTime.Nanoseconds())
+	data.Modifytime = time.Unix(0, stat.LastWriteTime.Nanoseconds())
+	data.Accesstime = time.Unix(0, stat.LastAccessTime.Nanoseconds())
 	data.Size = int(fileinfo.Size())
 	// } else {
 	// 	aTime := fileinfo.Sys().(*syscall.Stat_t).Atim
